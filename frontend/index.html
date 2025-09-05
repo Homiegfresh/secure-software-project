@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure Software Project - Frontend</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Secure Software Project</h1>
+  </header>
+
+  <main>
+    <section>
+      <p>This is a plain static frontend (HTML, CSS, JS) served by Nginx in Docker.</p>
+    </section>
+
+    <section class="api">
+      <h2>Backend Health Check</h2>
+      <button id="check-btn">Check API Health</button>
+      <pre id="result">Click the button to test the backend...</pre>
+    </section>
+  </main>
+
+  <footer>
+    <small>&copy; <span id="year"></span> Secure Software Project</small>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
