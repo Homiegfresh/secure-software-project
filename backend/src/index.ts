@@ -1,15 +1,11 @@
 import express from 'express';
-import cors from 'cors';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
-import helmet from "helmet";
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
 app.use(express.json());
-app.use(helmet());
 
 const PORT = Number(process.env.PORT || 4000);
 
