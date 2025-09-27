@@ -1,4 +1,5 @@
 (function () {
+  // Footer year
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = String(new Date().getFullYear());
 
@@ -84,30 +85,6 @@
     });
   }
 
-  // --- Existing API health check ---
-  const result = document.getElementById('result');
-  const btn = document.getElementById('check-btn');
-
-  function setResult(text, isError) {
-    if (!result) return;
-    result.textContent = text;
-    result.style.color = isError ? '#d00' : '#222';
-  }
-
-  if (btn) {
-    btn.addEventListener('click', async () => {
-      setResult('Checking...', false);
-      try {
-        const res = await fetch(`${backendBase}/health`);
-        const data = await res.json();
-        setResult(JSON.stringify(data, null, 2), false);
-      } catch (err) {
-        const msg = err && err.message ? err.message : String(err);
-        setResult(`Error contacting backend at ${backendBase}:\n` + msg, true);
-      }
-    });
-  }
-
-  // Initialize auth UI on every page
+  // Initialize auth UI on page load
   updateAuthUI();
 })();
