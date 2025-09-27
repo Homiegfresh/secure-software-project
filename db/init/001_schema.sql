@@ -41,4 +41,8 @@ CREATE TABLE player (
 );
 
 INSERT INTO player (firstname, lastname, displayname, username, password)
-VALUES ('Ian', 'McLeod', 'Ian McLeod', 'ian', 'password');
+VALUES 
+  ('Ian', 'McLeod', 'Ian McLeod', 'ian', 'password'),
+  ('Chloe', 'Goff', 'Chloe Goff', 'chloe', 'password'),
+  ('Liem', 'Chau', 'Liem Chau', 'liem', 'password'),
+  ('Jadaea', 'Locket', 'Jadaea Locket', 'jadaea', 'password');
