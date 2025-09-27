@@ -34,7 +34,7 @@
 
   function updateAuthUI() {
     const auth = getAuth();
-    if (greetEl) greetEl.textContent = auth ? `Signed in as ${auth.email}` : '';
+    if (greetEl) greetEl.textContent = auth ? `Signed in as ${auth.username}` : '';
     if (loginLink) loginLink.style.display = auth ? 'none' : '';
     if (logoutBtn) logoutBtn.style.display = auth ? '' : 'none';
   }

@@ -44,16 +44,108 @@ app.get('/health', async (_req, res) => {
   }
 });
 
-// Minimal login endpoint to accept credentials (no logic yet)
 app.post('/auth/login', async (req, res) => {
-  const { email, password } = req.body || {};
-  const sql = `SELECT id, username FROM player WHERE username = '${email}' AND password_hash = '${password}'`;
-  const result = await pool.query(sql);
+  const { username, password } = req.body || {};
+  if (!username || !password) {
+    return res.status(400).json({ status: 'error', message: 'Username and password are required' });
+  }
+  try {
+    const result = await pool.query('SELECT id, username FROM player WHERE username = $1 AND password = $2', [username, password]);
+    if (result.rows.length) return res.status(200).json({ status: 'success' });
+    return res.status(401).json({ status: 'unauthorized' });
+  } catch (err: any) {
+    return res.status(500).json({ status: 'error', message: err?.message || String(err) });
+  }
+});
 
-  if (result.rows.length)
-      return res.status(200).json({ status: 'success' });
+// --- Simple auth helper: read username from Authorization: Bearer <username>
+const parseAuthUsername = (req: any): string | null => {
+  const h = req.headers && (req.headers['authorization'] as string | undefined);
+  if (!h) return null;
+  const m = /^Bearer\s+(.+)$/i.exec(String(h));
+  return m ? m[1] : null;
+};
 
-  return res.status(401).send({ success: false });
+// Current player with cat details
+app.get('/me', async (req, res) => {
+  const username = parseAuthUsername(req);
+  if (!username) return res.status(401).json({ status: 'unauthorized' });
+  try {
+    const r = await pool.query(
+      `SELECT p.id, p.username, p.displayname, p.catid,
+              c.name as cat_name, c.color as cat_color, c.age as cat_age
+         FROM player p
+         LEFT JOIN cat c ON c.id = p.catid
+        WHERE p.username = $1`,
+      [username]
+    );
+    if (!r.rows.length) return res.status(401).json({ status: 'unauthorized' }); // unknown user
+    const row = r.rows[0];
+    return res.json({
+      status: 'ok',
+      player: {
+        id: row.id,
+        username: row.username,
+        displayname: row.displayname,
+        catid: row.catid,
+      },
+      cat: row.catid ? {
+        id: row.catid,
+        name: row.cat_name,
+        color: row.cat_color,
+        age: row.cat_age,
+      } : null
+    });
+  } catch (err: any) {
+    return res.status(500).json({ status: 'error', message: err?.message || String(err) });
+  }
+});
+
+// List races
+app.get('/races', async (_req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT id, name, distance_m, starts_at, status
+         FROM race
+        WHERE status = $1
+        ORDER BY starts_at ASC`,
+      ['scheduled']
+    );
+    return res.json({ status: 'ok', races: r.rows });
+  } catch (err: any) {
+    return res.status(500).json({ status: 'error', message: err?.message || String(err) });
+  }
+});
+
+// Sign up current player for a race
+app.post('/races/:id/signup', async (req, res) => {
+  const username = parseAuthUsername(req);
+  if (!username) return res.status(401).json({ status: 'unauthorized' });
+  const raceId = Number(req.params.id);
+  if (!Number.isFinite(raceId) || raceId <= 0) {
+    return res.status(400).json({ status: 'error', message: 'Invalid race id' });
+  }
+  try {
+    const pr = await pool.query('SELECT id FROM player WHERE username = $1', [username]);
+    if (!pr.rows.length) return res.status(401).json({ status: 'unauthorized' });
+    const playerId = pr.rows[0].id;
+
+    // Ensure race exists and is schedulable
+    const rr = await pool.query('SELECT id FROM race WHERE id = $1 AND status = $2', [raceId, 'scheduled']);
+    if (!rr.rows.length) return res.status(404).json({ status: 'not_found' });
+
+    const ir = await pool.query(
+      `INSERT INTO race_signup (raceid, playerid) VALUES ($1, $2)
+       ON CONFLICT (raceid, playerid) DO NOTHING
+       RETURNING id`,
+      [raceId, playerId]
+    );
+
+    const inserted = ir.rows.length > 0;
+    return res.json({ status: 'ok', signedUp: inserted, already: !inserted });
+  } catch (err: any) {
+    return res.status(500).json({ status: 'error', message: err?.message || String(err) });
+  }
 });
 
 // Graceful shutdown

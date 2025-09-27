@@ -29,7 +29,7 @@
   }
   function updateAuthUI() {
     const auth = getAuth();
-    if (greetEl) greetEl.textContent = auth ? `Signed in as ${auth.email}` : '';
+    if (greetEl) greetEl.textContent = auth ? `Signed in as ${auth.username}` : '';
     if (loginLink) loginLink.style.display = auth ? 'none' : '';
     if (logoutBtn) logoutBtn.style.display = auth ? '' : 'none';
   }
@@ -43,7 +43,7 @@
   // Login form handling (present only on login.html)
   const loginForm = document.getElementById('login-form');
   if (loginForm) {
-    const emailInput = document.getElementById('email');
+    const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const rememberInput = document.getElementById('remember');
     const errorEl = document.getElementById('form-error');
@@ -51,24 +51,36 @@
 
     loginForm.addEventListener('submit', async function (e) {
       e.preventDefault();
-      const email = emailInput && emailInput.value ? emailInput.value.trim() : '';
+      const username = usernameInput && usernameInput.value ? usernameInput.value.trim() : '';
       const password = passwordInput && passwordInput.value ? passwordInput.value : '';
       const remember = !!(rememberInput && rememberInput.checked);
-
-      const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
-      if (!emailOk) { setError('Please enter a valid email address.'); return; }
+      
       if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
 
-      // Post credentials to backend (no extra logic yet)
+      // Post credentials to backend and only proceed on success
       try {
-        await fetch(`${backendBase}/auth/login`, {
+        const res = await fetch(`${backendBase}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ username, password })
         });
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            setError('Invalid username or password.');
+          } else {
+            let msg = `Login failed (${res.status})`;
+            try {
+              const d = await res.json();
+              if (d && d.message) msg = d.message;
+            } catch {}
+            setError(msg);
+          }
+          return; // do not set auth or redirect
+        }
       } catch (err) {
-        // Non-fatal: proceed regardless for now
-        console.warn('Login POST failed:', err);
+        setError('Network error during login. Please try again.');
+        return;
       }
 
       const token = (window.crypto && window.crypto.getRandomValues)
@@ -76,12 +88,12 @@
         : Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 
       const expiresAt = remember ? (Date.now() + 30 * 24 * 60 * 60 * 1000) : (Date.now() + 2 * 60 * 60 * 1000);
-      const payload = { email, token, expiresAt };
+      const payload = { username, token, expiresAt };
       const dest = remember ? localStorage : sessionStorage;
       dest.setItem('auth', JSON.stringify(payload));
 
       setError('');
-      window.location.href = 'index.html';
+      window.location.href = 'dashboard.html';
     });
   }
 

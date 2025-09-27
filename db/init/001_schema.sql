@@ -32,10 +32,13 @@ CREATE TABLE player (
     id SERIAL PRIMARY KEY,
     firstname VARCHAR(100) NOT NULL,
     lastname VARCHAR(100) NOT NULL,
-    displayname VARCHAR(100) UNIQUE NOT NULL,
+    displayName VARCHAR(100) NOT NULL,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     score INT DEFAULT 0,
-    catid INT NOT NULL UNIQUE,  -- strict 1:1 (each player must have exactly one cat)
-    CONSTRAINT fk_cat FOREIGN KEY (catid) REFERENCES cat (id) ON DELETE RESTRICT
+    catId INT NULL,  -- optional reference to cat; may be NULL
+    CONSTRAINT fk_cat FOREIGN KEY (catId) REFERENCES cat (id) ON DELETE SET NULL
 );
+
+INSERT INTO player (firstname, lastname, displayname, username, password)
+VALUES ('Ian', 'McLeod', 'Ian McLeod', 'ian', 'password');
