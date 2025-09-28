@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customize Cat - Secure Software Project</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Customize Your Cat</h1>
+    <nav class="auth-nav">
+      <span id="greet" class="muted"></span>
+      <a id="login-link" href="login.html">Login</a>
+      <button id="logout-btn" class="secondary" style="display:none">Logout</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Cat Details</h2>
+      <p class="small muted" id="prefill-note" style="margin-top:0.25rem"></p>
+      <form id="cat-form" novalidate>
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" name="name" type="text" maxlength="100" required />
+        </div>
+        <div class="field">
+          <label for="color">Color</label>
+          <input id="color" name="color" type="text" maxlength="50" required />
+        </div>
+        <div class="field">
+          <label for="age">Age</label>
+          <input id="age" name="age" type="number" min="0" max="50" step="1" required />
+        </div>
+        <div id="form-error" class="error" role="alert" aria-live="polite"></div>
+        <div id="form-success" class="success" role="status" aria-live="polite" style="display:none"></div>
+        <div class="field inline">
+          <button type="submit">Save</button>
+          <a class="secondary" href="dashboard.html" style="margin-left:0.5rem">Back to dashboard</a>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <small>&copy; <span id="year"></span> Secure Software Project</small>
+  </footer>
+
+  <script src="cat-customize.js"></script>
+</body>
+</html>

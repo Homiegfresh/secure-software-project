@@ -101,6 +101,56 @@ app.get('/me', async (req, res) => {
   }
 });
 
+// Create or update current player's cat
+app.put('/me/cat', async (req, res) => {
+  const username = parseAuthUsername(req);
+  if (!username) return res.status(401).json({ status: 'unauthorized' });
+
+  let { name, color, age } = req.body || {};
+  if (typeof name !== 'string') name = '';
+  if (typeof color !== 'string') color = '';
+  const ageNum = Number(age);
+
+  name = name.trim();
+  color = color.trim();
+
+  if (!name || name.length > 100) {
+    return res.status(400).json({ status: 'error', message: 'Name is required and must be <= 100 chars' });
+  }
+  if (!color || color.length > 50) {
+    return res.status(400).json({ status: 'error', message: 'Color is required and must be <= 50 chars' });
+  }
+  if (!Number.isFinite(ageNum) || ageNum < 0 || ageNum > 50) {
+    return res.status(400).json({ status: 'error', message: 'Age must be a number between 0 and 50' });
+  }
+
+  try {
+    const pr = await pool.query('SELECT id, catid FROM player WHERE username = $1', [username]);
+    if (!pr.rows.length) return res.status(401).json({ status: 'unauthorized' });
+    const playerId = pr.rows[0].id as number;
+    const catId = pr.rows[0].catid as number | null;
+
+    if (catId) {
+      const ur = await pool.query(
+        'UPDATE cat SET name = $1, color = $2, age = $3 WHERE id = $4 RETURNING id, name, color, age',
+        [name, color, ageNum, catId]
+      );
+      const row = ur.rows[0];
+      return res.json({ status: 'ok', cat: row });
+    } else {
+      const ir = await pool.query(
+        'INSERT INTO cat (name, color, age) VALUES ($1, $2, $3) RETURNING id, name, color, age',
+        [name, color, ageNum]
+      );
+      const newCat = ir.rows[0];
+      await pool.query('UPDATE player SET catid = $1 WHERE id = $2', [newCat.id, playerId]);
+      return res.json({ status: 'ok', cat: newCat });
+    }
+  } catch (err: any) {
+    return res.status(500).json({ status: 'error', message: err?.message || String(err) });
+  }
+});
+
 // List races
 app.get('/races', async (_req, res) => {
   try {
