@@ -3,7 +3,7 @@
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = String(new Date().getFullYear());
 
-  // Assume backend is accessible on same host at port 4000 when using Docker Compose
+  // Backend base (same host, backend on 4000)
   const backendBase = `${location.protocol}//${location.hostname}:4000`;
 
   // --- Simple client-side auth state ---
@@ -11,77 +11,63 @@
   const loginLink = document.getElementById('login-link');
   const logoutBtn = document.getElementById('logout-btn');
 
-  function parseAuth(raw) {
-    try { return JSON.parse(raw); } catch { return null; }
-  }
-
-  function clearAuth() {
-    localStorage.removeItem('auth');
-    sessionStorage.removeItem('auth');
-  }
-
+  function parseAuth(raw) { try { return JSON.parse(raw); } catch { return null; } }
+  function clearAuth() { localStorage.removeItem('auth'); sessionStorage.removeItem('auth'); }
   function getAuth() {
     const raw = localStorage.getItem('auth') || sessionStorage.getItem('auth');
     const auth = raw ? parseAuth(raw) : null;
-
-    if (auth && auth.expiresAt && Date.now() > auth.expiresAt) {
-      clearAuth();
-      return null;
-    }
-
+    if (auth && auth.expiresAt && Date.now() > auth.expiresAt) { clearAuth(); return null; }
     return auth;
   }
-
   function updateAuthUI() {
     const auth = getAuth();
     if (greetEl) greetEl.textContent = auth ? `Signed in as ${auth.username}` : '';
     if (loginLink) loginLink.style.display = auth ? 'none' : '';
     if (logoutBtn) logoutBtn.style.display = auth ? '' : 'none';
   }
-
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      clearAuth();
-      updateAuthUI();
-    });
+    logoutBtn.addEventListener('click', () => { clearAuth(); updateAuthUI(); location.href = 'login.html'; });
   }
+  updateAuthUI();
 
-  // --- Existing API health check ---
-  const result = document.getElementById('result');
+  // Require auth
+  const auth = getAuth();
+  if (!auth) { location.href = 'login.html'; return; }
+  function authHeader() { return { 'Authorization': `Bearer ${auth.username}` }; }
 
-  function setResult(text, isError) {
-    if (!result) return;
-    result.textContent = text;
-    result.style.color = isError ? '#d00' : '#222';
-  }
-
-  const btn = document.getElementById('check-btn');
-  if (btn) {
-    btn.addEventListener('click', async () => {
-      setResult('Checking...', false);
-      try {
-        const res = await fetch(`${backendBase}/health`);
-        const data = await res.json();
-        setResult(JSON.stringify(data, null, 2), false);
-      } catch (err) {
-        const msg = err && err.message ? err.message : String(err);
-        setResult(`Error contacting backend at ${backendBase}:\n` + msg, true);
-      }
-    });
-  }
-
-  // --- Cat Race (client-side) ---
+  // Elements
+  const catNameEl = document.getElementById('your-cat-name');
+  const noCatMsgEl = document.getElementById('no-cat-msg');
   const startRaceBtn = document.getElementById('start-race-btn');
   const raceErrorEl = document.getElementById('race-error');
   const lanesEl = document.getElementById('lanes');
   const raceStandingsEl = document.getElementById('race-standings');
   const raceContainerEl = document.getElementById('race-container');
 
-  function setRaceError(msg) {
-    if (!raceErrorEl) return;
-    raceErrorEl.textContent = msg || '';
+  let yourCatName = '';
+
+  async function loadMe() {
+    try {
+      const res = await fetch(`${backendBase}/me`, { headers: { ...authHeader() } });
+      if (res.status === 401) { clearAuth(); location.href = 'login.html'; return; }
+      const data = await res.json();
+      if (data.cat && data.cat.name) {
+        yourCatName = data.cat.name;
+        if (catNameEl) catNameEl.textContent = yourCatName;
+        if (startRaceBtn) startRaceBtn.disabled = false;
+        if (noCatMsgEl) noCatMsgEl.style.display = 'none';
+      } else {
+        yourCatName = '';
+        if (catNameEl) catNameEl.textContent = '(no cat)';
+        if (startRaceBtn) startRaceBtn.disabled = true;
+        if (noCatMsgEl) noCatMsgEl.style.display = '';
+      }
+    } catch (err) {
+      if (raceErrorEl) raceErrorEl.textContent = 'Error loading your profile.';
+    }
   }
 
+  function setRaceError(msg) { if (raceErrorEl) raceErrorEl.textContent = msg || ''; }
   function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
 
   function pickOpponents(excludeName, n) {
@@ -92,7 +78,6 @@
       const name = pool.splice(i, 1)[0];
       if (name.toLowerCase() !== String(excludeName || '').trim().toLowerCase()) names.push(name);
     }
-    // Fallback generic names if needed
     while (names.length < n) names.push('Cat ' + (names.length + 1));
     return names;
   }
@@ -134,14 +119,14 @@
   }
 
   function startRace() {
+    if (!yourCatName) { setRaceError('You need to create a cat before racing.'); return; }
     if (!lanesEl || !raceStandingsEl || !raceContainerEl) return;
     setRaceError('');
 
-    const nameInput = document.getElementById('your-cat-name');
     const distanceInput = document.getElementById('race-distance');
     const speedInput = document.getElementById('your-cat-speed');
 
-    const yourName = (nameInput && nameInput.value ? nameInput.value : '').trim() || 'Your Cat';
+    const yourName = yourCatName;
     let distance = Number(distanceInput && distanceInput.value ? distanceInput.value : 100);
     let yourSpeed = speedInput && speedInput.value !== '' ? Number(speedInput.value) : NaN;
 
@@ -154,14 +139,11 @@
     }
 
     if (!Number.isFinite(yourSpeed)) {
-      // Random reasonable cat speed if not provided
       yourSpeed = 5 + Math.random() * 5; // 5–10 m/s
     }
     yourSpeed = clamp(yourSpeed, 1, 20);
 
-    // Opponents: 3 random cats with speeds within a range near player to keep it fun
     const opponents = pickOpponents(yourName, 3).map(n => {
-      // +/- up to 20% variation around your speed, but clamp to reasonable range
       const base = yourSpeed * (0.8 + Math.random() * 0.4);
       const spd = clamp(base, 3.5, 12);
       return { name: n, speed: spd };
@@ -208,7 +190,6 @@
 
       state.forEach(c => {
         if (c.finished) return;
-        // Tiny per-tick variance to make it lively
         const variance = 0.98 + Math.random() * 0.04; // +/-2%
         c.pos += c.baseSpeed * variance * dt;
         if (c.pos >= distance) {
@@ -217,7 +198,6 @@
           c.finishMs = now - start;
           finishedCount++;
         }
-        // Move runner
         const w = c.lane.clientWidth - 40; // leave some right padding
         const x = Math.max(0, Math.min(w, Math.round((c.pos / distance) * w)));
         c.runner.style.transform = `translate(${x}px, -50%)`;
@@ -237,10 +217,8 @@
     requestAnimationFrame(frame);
   }
 
-  if (startRaceBtn) {
-    startRaceBtn.addEventListener('click', startRace);
-  }
+  if (startRaceBtn) startRaceBtn.addEventListener('click', startRace);
 
-  // Initialize auth UI on page load
-  updateAuthUI();
+  // Load user/cat
+  loadMe();
 })();

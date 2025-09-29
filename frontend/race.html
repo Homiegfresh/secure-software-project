@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Race Your Cat - Secure Software Project</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Race Your Cat</h1>
+    <nav class="auth-nav">
+      <span id="greet" class="muted"></span>
+      <a id="login-link" href="login.html">Login</a>
+      <a id="dashboard-link" href="dashboard.html" class="secondary" style="margin-left:0.5rem;">Dashboard</a>
+      <button id="logout-btn" class="secondary" style="display:none">Logout</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card" id="cat-race-section">
+      <h2>Race Your Cat</h2>
+      <p class="small">Your cat: <strong id="your-cat-name">(loading...)</strong></p>
+      <div id="no-cat-msg" class="error" style="display:none" role="alert" aria-live="polite">
+        You don't have a cat yet. Please create one on your <a href="dashboard.html">dashboard</a> to race.
+      </div>
+
+      <form id="cat-race-form" class="small" onsubmit="return false;">
+        <div class="field inline" style="gap:1rem">
+          <div style="flex:1; min-width: 180px;">
+            <label for="race-distance">Race distance (m)</label>
+            <input id="race-distance" type="number" min="10" max="1000" step="10" value="100" />
+          </div>
+          <div style="flex:1; min-width: 180px;">
+            <label for="your-cat-speed">Your cat speed (m/s)</label>
+            <input id="your-cat-speed" type="number" min="1" max="20" step="0.1" placeholder="random if empty" />
+          </div>
+        </div>
+        <div id="race-error" class="error" role="alert" aria-live="polite"></div>
+        <div class="field">
+          <button id="start-race-btn" type="button" disabled>Start Race</button>
+        </div>
+      </form>
+
+      <div id="race-container" style="margin-top:0.75rem; display:none">
+        <div id="lanes" aria-live="off"></div>
+        <div id="race-standings" class="small" style="margin-top:0.5rem" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>&copy; <span id="year"></span> Secure Software Project</small>
+  </footer>
+
+  <script src="race.js"></script>
+</body>
+</html>
