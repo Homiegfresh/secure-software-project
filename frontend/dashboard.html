@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cat Dashboard - Secure Software Project</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Your Cat Dashboard</h1>
+    <nav class="auth-nav">
+      <span id="greet" class="muted"></span>
+      <a id="login-link" href="login.html">Login</a>
+      <button id="logout-btn" class="secondary" style="display:none">Logout</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card" style="margin-bottom: 1rem;">
+      <h2>Hello, <span id="player-name">Player</span>!</h2>
+      <p class="small">Your cat <strong id="cat-name">(loading...)</strong> is wandering happily below. Color: <span id="cat-color">?</span>, Age: <span id="cat-age">?</span>.</p>
+      <p style="margin-top:0.5rem">
+        <a href="cat-customize.html" class="secondary">Customize your cat</a>
+        <a href="race.html" class="secondary" style="margin-left:0.5rem">Race your cat</a>
+      </p>
+    </section>
+
+    <section class="dashboard">
+      <div class="playfield" id="playfield" aria-label="Cat play area">
+        <div id="cat" class="cat" aria-label="Cat" role="img">🐱</div>
+      </div>
+      <div class="panel card">
+        <h3>Upcoming Races</h3>
+        <div id="race-status" class="small"></div>
+        <ul id="race-list" class="race-list"></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>&copy; <span id="year"></span> Secure Software Project</small>
+  </footer>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

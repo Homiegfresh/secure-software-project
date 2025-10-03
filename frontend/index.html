@@ -9,6 +9,11 @@
 <body>
   <header>
     <h1>Secure Software Project</h1>
+    <nav class="auth-nav">
+      <span id="greet" class="muted"></span>
+      <a id="login-link" href="login.html">Login</a>
+      <button id="logout-btn" class="secondary" style="display:none">Logout</button>
+    </nav>
   </header>
 
   <main>
@@ -21,12 +26,13 @@
       <button id="check-btn">Check API Health</button>
       <pre id="result">Click the button to test the backend...</pre>
     </section>
+
   </main>
 
   <footer>
     <small>&copy; <span id="year"></span> Secure Software Project</small>
   </footer>
 
-  <script src="script.js"></script>
+  <script src="index.js"></script>
 </body>
 </html>
