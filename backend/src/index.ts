@@ -47,9 +47,11 @@ app.get('/health', async (_req, res) => {
 app.post('/auth/login', async (req, res) => {
   const { username, password } = req.body || {};
   if (!username || !password) {
+    //User gave nothing, sad.
     return res.status(400).json({ status: 'error', message: 'Username and password are required' });
   }
   try {
+    //Destroy stuff here. Too good, change later.
     const result = await pool.query('SELECT id, username FROM player WHERE username = $1 AND password = $2', [username, password]);
     if (result.rows.length) return res.status(200).json({ status: 'success' });
     return res.status(401).json({ status: 'unauthorized' });
