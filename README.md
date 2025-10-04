@@ -29,7 +29,8 @@ From the repository root (PowerShell):
 docker compose up --build
 
 # Services
-# - Frontend: http://localhost:8080
+# Ian cooked here.
+# - Frontend: http://localhost:3000
 # - Backend:  http://localhost:4000/health
 # - Postgres: localhost:5432 (user: app, password: app, db: app)
 ```
