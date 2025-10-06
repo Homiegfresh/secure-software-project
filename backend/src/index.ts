@@ -45,16 +45,20 @@ app.get('/health', async (_req, res) => {
 });
 
 app.post('/auth/login', async (req, res) => {
-  const { username, password } = req.body || {};
+  const username = req.body.username
+  const password = req.body.password
   if (!username || !password) {
-    //User gave nothing, sad.
+    //User gave nothing
     return res.status(400).json({ status: 'error', message: 'Username and password are required' });
   }
   try {
-    //Destroy stuff here. Too good, change later.
-    const result = await pool.query('SELECT id, username FROM player WHERE username = $1 AND password = $2', [username, password]);
-    if (result.rows.length) return res.status(200).json({ status: 'success' });
-    return res.status(401).json({ status: 'unauthorized' });
+    const result = await pool.query('SELECT * FROM player WHERE username = $1', [username]);
+    const result2 = await pool.query('SELECT * FROM player WHERE password = $1', [password]);
+    if (result.rows.length && result2.rows.length) {
+      return res.status(200).json({ status: 'success' });
+    } else {
+      return res.status(401).json({ status: 'unauthorized' });
+    }
   } catch (err: any) {
     return res.status(500).json({ status: 'error', message: err?.message || String(err) });
   }
