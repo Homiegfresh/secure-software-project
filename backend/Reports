@@ -1,4 +1,4 @@
 Vulnerabilities
-Plaintext password
-Brute Force
-Logic error (buggin)
+Plaintext password - No security storing passwords lmao
+Brute Force - no attempt limit
+Logic error in index.ts (buggin)
