@@ -33,6 +33,7 @@ const pool = new Pool({
   database: process.env.PGDATABASE || 'app',
 });
 
+//Checks the status of the database
 app.get('/health', async (_req, res) => {
   try {
     const r = await pool.query('SELECT 1 as ok');
@@ -44,6 +45,7 @@ app.get('/health', async (_req, res) => {
   }
 });
 
+//The actual query
 app.post('/auth/login', async (req, res) => {
   const username = req.body.username
   const password = req.body.password
@@ -52,9 +54,8 @@ app.post('/auth/login', async (req, res) => {
     return res.status(400).json({ status: 'error', message: 'Username and password are required' });
   }
   try {
-    const result = await pool.query('SELECT * FROM player WHERE username = $1', [username]);
-    const result2 = await pool.query('SELECT * FROM player WHERE password = $1', [password]);
-    if (result.rows.length && result2.rows.length) {
+    const sql =await pool.query( `SELECT * FROM player WHERE username = '${username}' AND password = '${password}' `);
+    if (sql.rows.length) {
       return res.status(200).json({ status: 'success' });
     } else {
       return res.status(401).json({ status: 'unauthorized' });
