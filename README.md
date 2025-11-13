@@ -29,7 +29,6 @@ From the repository root (PowerShell):
 docker compose up --build
 
 # Services
-# Ian cooked here.
 # - Frontend: http://localhost:3000
 # - Backend:  http://localhost:4000/health
 # - Postgres: localhost:5432 (user: app, password: app, db: app)
@@ -54,7 +53,7 @@ From the frontend directory:
 ```powershell
 cd frontend
 docker compose up --build
-# Visit http://localhost:8080
+# Visit http://localhost:3000
 ```
 
 ## Run only the backend (with a local Postgres just for backend)
@@ -78,7 +77,7 @@ The backend reads database configuration from environment variables with these d
 - PGDATABASE=app
 - PORT=4000 (backend HTTP port)
 
-The frontend JavaScript calls the backend at the same host on port 4000, which works when running Docker containers with port mappings (browser requests go to localhost). If you need a different port, edit `frontend/script.js`.
+The frontend JavaScript calls the backend at the same host on port 4000, which works when running Docker containers with port mappings (browser requests go to localhost). If you need a different port, edit the frontend JS files (e.g., `frontend/index.js`, `frontend/login.js`, `frontend/dashboard.js`, or `frontend/race.js`).
 
 ## Development notes
 

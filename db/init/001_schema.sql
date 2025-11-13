@@ -40,10 +40,11 @@ CREATE TABLE player (
     CONSTRAINT fk_cat FOREIGN KEY (catId) REFERENCES cat (id) ON DELETE SET NULL
 );
 
+-- Seed data (passwords are legacy plaintext; they will be re-hashed on first successful login)
 INSERT INTO player (firstname, lastname, displayname, username, password)
 VALUES 
   ('Ian', 'McLeod', 'Ian McLeod', 'ian', 'password'),
   ('Chloe', 'Goff', 'Chloe Goff', 'chloe', 'password'),
   ('Liem', 'Wow', 'Liem WOW', 'liem', 'password'),
-  ('Liem', 'Chau', 'Liem Chau', 'liem', '12345678'),
+  ('Liem', 'Chau', 'Liem Chau', 'liem2', '12345678'),
   ('Jadaea', 'Locket', 'Jadaea Locket', 'jadaea', 'password');

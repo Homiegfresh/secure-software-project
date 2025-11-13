@@ -6,37 +6,12 @@
   // Backend base
   const backendBase = `${location.protocol}//${location.hostname}:4000`;
 
-  // --- Simple client-side auth state ---
+  // --- Auth-aware header based on server session ---
   const greetEl = document.getElementById('greet');
   const loginLink = document.getElementById('login-link');
   const logoutBtn = document.getElementById('logout-btn');
 
-  function parseAuth(raw) { try { return JSON.parse(raw); } catch { return null; } }
-  function clearAuth() { localStorage.removeItem('auth'); sessionStorage.removeItem('auth'); }
-  function getAuth() {
-    const raw = localStorage.getItem('auth') || sessionStorage.getItem('auth');
-    const auth = raw ? parseAuth(raw) : null;
-    if (auth && auth.expiresAt && Date.now() > auth.expiresAt) { clearAuth(); return null; }
-    return auth;
-  }
-  function updateAuthUI() {
-    const auth = getAuth();
-    if (greetEl) greetEl.textContent = auth ? `Signed in as ${auth.username}` : '';
-    if (loginLink) loginLink.style.display = auth ? 'none' : '';
-    if (logoutBtn) logoutBtn.style.display = auth ? '' : 'none';
-  }
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => { clearAuth(); updateAuthUI(); location.href = 'login.html'; });
-  }
-  updateAuthUI();
-
-  // Require auth on this page
-  const auth = getAuth();
-  if (!auth) { location.href = 'login.html'; return; }
-
-  function authHeader() { return { 'Authorization': `Bearer ${auth.username}` }; }
-
-  // Elements
+  // Dashboard elements
   const playerNameEl = document.getElementById('player-name');
   const catNameEl = document.getElementById('cat-name');
   const catColorEl = document.getElementById('cat-color');
@@ -44,13 +19,45 @@
   const raceListEl = document.getElementById('race-list');
   const raceStatusEl = document.getElementById('race-status');
 
+  async function refreshHeader() {
+    try {
+      const res = await fetch(`${backendBase}/me`, { credentials: 'include' });
+      if (res.ok) {
+        const d = await res.json();
+        if (greetEl) greetEl.textContent = d && d.player ? `Signed in as ${d.player.username}` : '';
+        if (loginLink) loginLink.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = '';
+      } else {
+        if (greetEl) greetEl.textContent = '';
+        if (loginLink) loginLink.style.display = '';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+      }
+    } catch {
+      if (greetEl) greetEl.textContent = '';
+      if (loginLink) loginLink.style.display = '';
+      if (logoutBtn) logoutBtn.style.display = 'none';
+    }
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+      try { await fetch(`${backendBase}/auth/logout`, { method: 'POST', credentials: 'include' }); } catch {}
+      location.href = 'login.html';
+    });
+  }
+
+  refreshHeader().then(async () => {
+      // Require auth on this page based on /me
+      const meRes = await fetch(`${backendBase}/me`, { credentials: 'include' });
+      if (!meRes.ok) { location.href = 'login.html'; }
+  });
+
   // Load player and cat
   async function loadMe() {
     try {
-      const res = await fetch(`${backendBase}/me`, { headers: { ...authHeader() } });
+      const res = await fetch(`${backendBase}/me`, { credentials: 'include' });
       if (res.status === 401) {
-        // Not logged in or unknown user; reset and redirect
-        clearAuth();
+        // Not logged in or unknown user
         location.href = 'login.html';
         return;
       }
@@ -99,7 +106,8 @@
           try {
             const res2 = await fetch(`${backendBase}/races/${r.id}/signup`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', ...authHeader() }
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include'
             });
             const d2 = await res2.json();
             if (res2.ok && d2.status === 'ok') {
@@ -144,6 +152,8 @@
   moveCat();
 
   // Kick off loads
-  loadMe();
-  loadRaces();
+  const loadUserTask = loadMe();
+  const loadRacesTask = loadRaces();
+  
+  Promise.all([loadUserTask, loadRacesTask]).catch((e) => console.error('Error loading dashboard:', e));
 })();
