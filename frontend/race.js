@@ -71,7 +71,7 @@
   function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
 
   function pickOpponents(excludeName, n) {
-    const pool = ['Mittens','Shadow','Luna','Simba','Tiger','Coco','Oreo','Smokey','Pumpkin','Nala','Gizmo','Pepper','Mocha','Willow','Ziggy'];
+    const pool = ['Mittens','Shadow','Luna','Sol', 'Paimon', 'Simba','Tiger','Coco','Oreo','Smokey','Pumpkin','Nala','Gizmo','Pepper','Mocha','Willow','Ziggy'];
     const names = [];
     while (names.length < n && pool.length) {
       const i = Math.floor(Math.random() * pool.length);
