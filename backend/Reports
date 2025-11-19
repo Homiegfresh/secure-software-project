@@ -1,4 +1,8 @@
 Vulnerabilities
-Plaintext password - No security storing passwords lmao
-Brute Force - no attempt limit
+Plaintext password - No security storing passwords lmao [Probably mitigated]
+Brute Force - no attempt limit [Mitigated but bugged asf]
 Logic error in index.ts (buggin)
+
+One or all of these have been addressed or acknowleged sometime between the making of this file
+and 11/17/2025
+For any inquiries or complaints, go to our head chef Ian Mcleod and tell him the sous chef sent you
