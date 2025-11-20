@@ -30,6 +30,8 @@ services:
       PGDATABASE: app
     ports:
       - "4000:4000"
+      - "9229:9229"
+    command: [ "node", "--inspect=0.0.0.0:9229", "dist/index.js" ]
     depends_on:
       postgres:
         condition: service_healthy

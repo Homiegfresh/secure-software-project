@@ -1,4 +1,5 @@
 (function () {
+    debugger;
   // Footer year
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = String(new Date().getFullYear());
@@ -6,35 +7,47 @@
   // Backend base
   const backendBase = `${location.protocol}//${location.hostname}:4000`;
 
-  // --- Simple client-side auth state ---
+  // Header elements (use server session like dashboard.js)
   const greetEl = document.getElementById('greet');
   const loginLink = document.getElementById('login-link');
   const logoutBtn = document.getElementById('logout-btn');
-
-  function parseAuth(raw) { try { return JSON.parse(raw); } catch { return null; } }
-  function clearAuth() { localStorage.removeItem('auth'); sessionStorage.removeItem('auth'); }
-  function getAuth() {
-    const raw = localStorage.getItem('auth') || sessionStorage.getItem('auth');
-    const auth = raw ? parseAuth(raw) : null;
-    if (auth && auth.expiresAt && Date.now() > auth.expiresAt) { clearAuth(); return null; }
-    return auth;
+  
+  async function refreshHeader() {
+    try {
+      const res = await fetch(`${backendBase}/me`, { credentials: 'include' });
+      if (res.ok) {
+        const d = await res.json();
+        if (greetEl) greetEl.textContent = d && d.player ? `Signed in as ${d.player.username}` : '';
+        if (loginLink) loginLink.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = '';
+      } else {
+        if (greetEl) greetEl.textContent = '';
+        if (loginLink) loginLink.style.display = '';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+      }
+    } catch {
+      if (greetEl) greetEl.textContent = '';
+      if (loginLink) loginLink.style.display = '';
+      if (logoutBtn) logoutBtn.style.display = 'none';
+    }
   }
-  function updateAuthUI() {
-    const auth = getAuth();
-    if (greetEl) greetEl.textContent = auth ? `Signed in as ${auth.username}` : '';
-    if (loginLink) loginLink.style.display = auth ? 'none' : '';
-    if (logoutBtn) logoutBtn.style.display = auth ? '' : 'none';
-  }
+  
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => { clearAuth(); updateAuthUI(); location.href = 'login.html'; });
+    logoutBtn.addEventListener('click', async () => {
+      try { await fetch(`${backendBase}/auth/logout`, { method: 'POST', credentials: 'include' }); } catch {}
+      location.href = 'login.html';
+    });
   }
-  updateAuthUI();
 
-  // Require auth
-  const auth = getAuth();
-  if (!auth) { location.href = 'login.html'; return; }
-
-  function authHeader() { return { 'Authorization': `Bearer ${auth.username}` }; }
+  // Require auth for this page via server session
+  refreshHeader().then(async () => {
+    try {
+      const meRes = await fetch(`${backendBase}/me`, { credentials: 'include' });
+      if (!meRes.ok) { location.href = 'login.html'; }
+    } catch {
+      location.href = 'login.html';
+    }
+  });
 
   // Elements
   const form = document.getElementById('cat-form');
@@ -54,8 +67,8 @@
 
   async function loadMe() {
     try {
-      const res = await fetch(`${backendBase}/me`, { headers: { ...authHeader() } });
-      if (res.status === 401) { clearAuth(); location.href = 'login.html'; return; }
+      const res = await fetch(`${backendBase}/me`, { credentials: 'include' });
+      if (res.status === 401) { location.href = 'login.html'; return; }
       if (!res.ok) throw new Error(`Failed to load profile (${res.status})`);
       const data = await res.json();
       if (data && data.cat) {
@@ -94,7 +107,8 @@
       try {
         const res = await fetch(`${backendBase}/me/cat`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', ...authHeader() },
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ name, color, age })
         });
         const data = await res.json().catch(() => ({}));
