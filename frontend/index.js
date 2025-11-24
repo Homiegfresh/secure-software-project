@@ -6,6 +6,26 @@
   // Assume backend is accessible on same host at port 4000 when using Docker Compose
   const backendBase = `${location.protocol}//${location.hostname}:4000`;
 
+  // --- Redirect index based on auth status ---
+  // Requirement: Visiting the index URL should not show content, but redirect the user.
+  // - If authenticated (server session exists): go to dashboard.html
+  // - Otherwise: go to login.html
+  (async function () {
+    try {
+      const res = await fetch(`${backendBase}/me`, { credentials: 'include' });
+      if (res.ok) {
+        // Logged in → home dashboard
+        location.replace('dashboard.html');
+      } else {
+        // Not logged in → login page
+        location.replace('login.html');
+      }
+    } catch {
+      // On network or other errors, default to login
+      location.replace('login.html');
+    }
+  })();
+
   // --- Simple client-side auth state ---
   const greetEl = document.getElementById('greet');
   const loginLink = document.getElementById('login-link');

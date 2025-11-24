@@ -1,5 +1,4 @@
 (function () {
-    debugger;
   // Footer year
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = String(new Date().getFullYear());
@@ -125,5 +124,5 @@
   }
 
   // Kick off prefill
-  loadMe();
+  loadMe().catch((e) => console.error('Error loading cat details:', e));
 })();
